@@ -6,9 +6,9 @@ import { NewsArticle } from '../../types';
 import { CategoryChip } from '../../components/CategoryChip';
 
 const NAV_ITEMS = [
-  { to: '/reporter', label: 'My Profile' },
-  { to: '/reporter/password', label: 'Update Password' },
   { to: '/reporter/upload', label: 'Upload News' },
+  { to: '/reporter/password', label: 'Update Password' },
+  { to: '/reporter', label: 'My Profile' },
 ];
 
 export default function ReporterProfilePage() {

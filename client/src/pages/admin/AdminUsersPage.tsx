@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { AlertBanner } from '../../components/AlertBanner';
 import {
   listReportersRequest,
@@ -17,13 +18,14 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminUsersPage() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   const [reporters, setReporters] = useState<PublicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // FIX 1: Initialized missing profile dropdown state
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const [name, setName] = useState('');
@@ -46,11 +48,18 @@ export default function AdminUsersPage() {
     loadReporters();
   }, []);
 
-  // FIX 2: Added missing handleLogout function
-  function handleLogout() {
-    // Add your actual logout or session clearing routing logic here
-    console.log('User logged out');
-    setIsProfileDropdownOpen(false);
+  async function handleLogout() {
+    try {
+      if (logout) {
+        await logout();
+      } else {
+        localStorage.removeItem('token');
+      }
+      setIsProfileDropdownOpen(false);
+      navigate('/login');
+    } catch (err) {
+      setError('An error occurred during sign out.');
+    }
   }
 
   async function handleCreate(e: FormEvent) {
@@ -104,6 +113,8 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-[#ebf1f5] font-sans antialiased flex flex-col md:flex-row">
+      
+      {/* --- SIDE NAVIGATION BAR --- */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
@@ -139,6 +150,7 @@ export default function AdminUsersPage() {
         </nav>
       </aside>
 
+      {/* Mobile Drawer Overlay Mask Backdrop */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -146,11 +158,12 @@ export default function AdminUsersPage() {
         />
       )}
 
+      {/* --- WORKSPACE VIEWSPACE --- */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* --- TOP NAVBAR --- */}
+        
+        {/* --- TOP HEADER NAVIGATION BAR --- */}
         <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-3">
-            {/* Hamburger button for mobile */}
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg md:hidden"
@@ -162,7 +175,7 @@ export default function AdminUsersPage() {
             <h1 className="text-lg font-semibold text-gray-800">Admin Add Reporters</h1>
           </div>
 
-          {/* Profile Controls with Dropdown */}
+          {/* Identity controls and logout profile settings structure */}
           <div className="relative">
             <button 
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -177,7 +190,6 @@ export default function AdminUsersPage() {
               </svg>
             </button>
 
-            {/* Profile Dropdown Menu */}
             {isProfileDropdownOpen && (
               <>
                 <div onClick={() => setIsProfileDropdownOpen(false)} className="fixed inset-0 z-10" />
@@ -197,12 +209,13 @@ export default function AdminUsersPage() {
           </div>
         </header>
 
+        {/* --- PANEL MAIN BODY CONTAINER --- */}
         <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
-          <div className="text-sm text-gray-500 flex items-center gap-2">
-            <span>Home</span>
+          <nav className="text-sm text-gray-500 flex items-center gap-2">
+            <span className="hover:text-slate-700 cursor-pointer">Home</span>
             <span>&gt;</span>
             <span className="text-gray-700 font-medium">Manage Reporters</span>
-          </div>
+          </nav>
 
           {error && (
             <AlertBanner variant="error" onDismiss={() => setError(null)}>
@@ -237,55 +250,58 @@ export default function AdminUsersPage() {
                     </div>
                   ) : (
                     <div className="overflow-hidden rounded-2xl border border-gray-100">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200 bg-gray-50 text-left font-mono text-[11px] uppercase tracking-wide text-gray-500">
-                            <th className="px-4 py-3">Name</th>
-                            <th className="px-4 py-3">Email</th>
-                            <th className="px-4 py-3">Status</th>
-                            <th className="px-4 py-3 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {reporters.map((reporter) => (
-                            <tr key={reporter.id} className="border-b border-gray-100 last:border-0">
-                              <td className="px-4 py-3 font-medium text-gray-900">{reporter.name}</td>
-                              <td className="px-4 py-3 text-gray-600">{reporter.email}</td>
-                              <td className="px-4 py-3">
-                                <span
-                                  className={`font-mono text-[11px] uppercase tracking-wide ${
-                                    reporter.is_active ? 'text-[#4f46e5]' : 'text-gray-400'
-                                  }`}
-                                >
-                                  {reporter.is_active ? 'Active' : 'Terminated'}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                {reporter.is_active && (
-                                  <button
-                                    onClick={() => handleTerminate(reporter.id)}
-                                    className="mr-3 text-xs font-semibold uppercase tracking-wide text-gray-600 hover:underline"
-                                  >
-                                    Terminate
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDelete(reporter.id)}
-                                  className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-700 hover:underline"
-                                >
-                                  Delete
-                                </button>
-                              </td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full text-sm min-w-[500px]">
+                          <thead>
+                            <tr className="border-b border-gray-200 bg-gray-50 text-left font-mono text-[11px] uppercase tracking-wide text-gray-500">
+                              <th className="px-4 py-3">Name</th>
+                              <th className="px-4 py-3">Email</th>
+                              <th className="px-4 py-3">Status</th>
+                              <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {reporters.map((reporter) => (
+                              <tr key={reporter.id} className="border-b border-gray-100 last:border-0">
+                                <td className="px-4 py-3 font-medium text-gray-900">{reporter.name}</td>
+                                <td className="px-4 py-3 text-gray-600">{reporter.email}</td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`font-mono text-[11px] uppercase tracking-wide ${
+                                      reporter.is_active ? 'text-[#4f46e5]' : 'text-gray-400'
+                                    }`}
+                                  >
+                                    {reporter.is_active ? 'Active' : 'Terminated'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-right whitespace-nowrap">
+                                  {reporter.is_active && (
+                                    <button
+                                      onClick={() => handleTerminate(reporter.id)}
+                                      className="mr-3 text-xs font-semibold uppercase tracking-wide text-gray-600 hover:underline"
+                                    >
+                                      Terminate
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleDelete(reporter.id)}
+                                    className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-700 hover:underline"
+                                  >
+                                    Delete
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* Side Column Data Creation Widget */}
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-200 p-6">
                 <div className="flex items-center justify-between gap-3 mb-4">
@@ -334,7 +350,7 @@ export default function AdminUsersPage() {
                     {submitting ? 'Creating…' : 'Create reporter account'}
                   </button>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 leading-relaxed">
                     A temporary password is generated automatically and emailed to the reporter.
                   </p>
                 </form>
