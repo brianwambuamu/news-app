@@ -3,8 +3,9 @@ import { DashboardLayout } from '../../components/DashboardLayout';
 import { NewsUploadForm } from '../../components/NewsUploadForm';
 
 const NAV_ITEMS = [
-  { to: '/reporter', label: 'My Profile' },
   { to: '/reporter/upload', label: 'Upload News' },
+  { to: '/reporter/password', label: 'Update Password' },
+  { to: '/reporter', label: 'My Profile' },
 ];
 
 export default function ReporterUploadNewsPage() {

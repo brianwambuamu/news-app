@@ -6,6 +6,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUploadNewsPage from './pages/admin/AdminUploadNewsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import ReporterProfilePage from './pages/reporter/ReporterProfilePage';
+import ReporterPasswordPage from './pages/reporter/ReporterPasswordPage';
 import ReporterUploadNewsPage from './pages/reporter/ReporterUploadNewsPage';
 
 function RootRedirect() {
@@ -39,6 +40,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['reporter']} />}>
             <Route path="/reporter" element={<ReporterProfilePage />} />
+            <Route path="/reporter/password" element={<ReporterPasswordPage />} />
             <Route path="/reporter/upload" element={<ReporterUploadNewsPage />} />
           </Route>
 

@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
       {/* --- SIDEBAR NAVIGATION --- */}
       <aside className={`
         fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
-        md:translate-x-0 md:static md:h-screen flex flex-col
+        md:translate-x-0 md:sticky md:top-0 md:h-screen flex flex-col
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-0 max-md:-translate-x-full'}
       `}>
         {/* Brand Logo Header */}
@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* --- TOP NAVBAR --- */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shrink-0">
+        <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-3">
             {/* Hamburger button for mobile */}
             <button 

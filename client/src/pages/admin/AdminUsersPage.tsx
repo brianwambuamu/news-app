@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { DashboardLayout } from '../../components/DashboardLayout';
+import { NavLink } from 'react-router-dom';
 import { AlertBanner } from '../../components/AlertBanner';
 import {
   listReportersRequest,
@@ -21,6 +21,10 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // FIX 1: Initialized missing profile dropdown state
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,6 +45,13 @@ export default function AdminUsersPage() {
   useEffect(() => {
     loadReporters();
   }, []);
+
+  // FIX 2: Added missing handleLogout function
+  function handleLogout() {
+    // Add your actual logout or session clearing routing logic here
+    console.log('User logged out');
+    setIsProfileDropdownOpen(false);
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -69,6 +80,7 @@ export default function AdminUsersPage() {
     if (!window.confirm('Deactivate this reporter? They will no longer be able to log in.')) {
       return;
     }
+
     try {
       await terminateUserRequest(id);
       await loadReporters();
@@ -81,6 +93,7 @@ export default function AdminUsersPage() {
     if (!window.confirm('Permanently delete this reporter account? This cannot be undone.')) {
       return;
     }
+
     try {
       await deleteUserRequest(id);
       setReporters((prev) => prev.filter((r) => r.id !== id));
@@ -90,121 +103,246 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <DashboardLayout navItems={NAV_ITEMS}>
-      <header className="mb-8">
-        <p className="dateline">Staffing</p>
-        <h1 className="font-display text-3xl font-semibold text-ink-900">Manage reporters</h1>
-      </header>
-
-      {error && (
-        <div className="mb-6">
-          <AlertBanner variant="error" onDismiss={() => setError(null)}>
-            {error}
-          </AlertBanner>
-        </div>
-      )}
-      {success && (
-        <div className="mb-6">
-          <AlertBanner variant="success" onDismiss={() => setSuccess(null)}>
-            {success}
-          </AlertBanner>
-        </div>
-      )}
-
-      <div className="mb-10 max-w-xl border border-ink-200 bg-white p-6">
-        <p className="dateline mb-4">Add a reporter</p>
-        <form onSubmit={handleCreate} className="space-y-4">
+    <div className="min-h-screen bg-[#ebf1f5] font-sans antialiased flex flex-col md:flex-row">
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
+          md:translate-x-0 md:sticky md:top-0 md:h-screen flex flex-col
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-0 max-md:-translate-x-full'}
+        `}
+      >
+        <div className="h-16 flex items-center px-6 border-b border-gray-100 gap-3">
+          <img src="/BBN254.jpeg" alt="App Logo" className="h-12 w-20 object-cover" />
           <div>
-            <label htmlFor="name" className="label-text">
-              Full name
-            </label>
-            <input
-              id="name"
-              required
-              minLength={2}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input-field"
-              placeholder="Jane Doe"
-            />
+            <div className="font-bold text-sm text-gray-800">BBN KENYA</div>
           </div>
-          <div>
-            <label htmlFor="reporter-email" className="label-text">
-              Email
-            </label>
-            <input
-              id="reporter-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="jane@newsroom.com"
-            />
-          </div>
-          <button type="submit" disabled={submitting} className="btn-primary">
-            {submitting ? 'Creating…' : 'Create reporter account'}
-          </button>
-          <p className="text-xs text-ink-500">
-            A temporary password is generated automatically and emailed to the reporter.
-          </p>
-        </form>
-      </div>
+        </div>
 
-      <div>
-        <p className="dateline mb-4">All reporters</p>
-        {loading ? (
-          <p className="font-mono text-sm text-ink-500">Loading…</p>
-        ) : reporters.length === 0 ? (
-          <p className="font-mono text-sm text-ink-500">No reporters yet.</p>
-        ) : (
-          <div className="overflow-hidden border border-ink-200 bg-white">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-ink-200 bg-ink-50 text-left font-mono text-[11px] uppercase tracking-wide text-ink-500">
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reporters.map((reporter) => (
-                  <tr key={reporter.id} className="border-b border-ink-100 last:border-0">
-                    <td className="px-4 py-3 font-medium text-ink-800">{reporter.name}</td>
-                    <td className="px-4 py-3 text-ink-600">{reporter.email}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`font-mono text-[11px] uppercase tracking-wide ${
-                          reporter.is_active ? 'text-masthead' : 'text-wire'
-                        }`}
-                      >
-                        {reporter.is_active ? 'Active' : 'Terminated'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {reporter.is_active && (
-                        <button
-                          onClick={() => handleTerminate(reporter.id)}
-                          className="mr-3 text-xs font-semibold uppercase tracking-wide text-ink-600 hover:underline"
-                        >
-                          Terminate
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(reporter.id)}
-                        className="text-xs font-semibold uppercase tracking-wide text-wire hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end
+              className={({ isActive }) =>
+                `block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#1a252f] text-white'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* --- TOP NAVBAR --- */}
+        <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Hamburger button for mobile */}
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg md:hidden"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-semibold text-gray-800">Admin Add Reporters</h1>
           </div>
-        )}
+
+          {/* Profile Controls with Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-full transition"
+            >
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+                SA
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-gray-700">Super Admin</span>
+              <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Profile Dropdown Menu */}
+            {isProfileDropdownOpen && (
+              <>
+                <div onClick={() => setIsProfileDropdownOpen(false)} className="fixed inset-0 z-10" />
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium flex items-center gap-2"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
+          <div className="text-sm text-gray-500 flex items-center gap-2">
+            <span>Home</span>
+            <span>&gt;</span>
+            <span className="text-gray-700 font-medium">Manage Reporters</span>
+          </div>
+
+          {error && (
+            <AlertBanner variant="error" onDismiss={() => setError(null)}>
+              {error}
+            </AlertBanner>
+          )}
+
+          {success && (
+            <AlertBanner variant="success" onDismiss={() => setSuccess(null)}>
+              {success}
+            </AlertBanner>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden border border-gray-200">
+                <div className="bg-[#4f46e5] text-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">Reporter roster</h2>
+                    <p className="text-sm text-white/80">All registered reporters and account status.</p>
+                  </div>
+                  <div className="text-sm font-semibold text-white">{loading ? '...' : `${reporters.length} reporters`}</div>
+                </div>
+
+                <div className="p-6">
+                  {loading ? (
+                    <div className="py-12 text-center text-gray-500 font-medium">Loading reporters...</div>
+                  ) : reporters.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <p className="text-gray-500 font-medium mb-2">No reporters have been added yet.</p>
+                      <p className="text-sm text-gray-500">Use the form on the right to create the first reporter account.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-2xl border border-gray-100">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 bg-gray-50 text-left font-mono text-[11px] uppercase tracking-wide text-gray-500">
+                            <th className="px-4 py-3">Name</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reporters.map((reporter) => (
+                            <tr key={reporter.id} className="border-b border-gray-100 last:border-0">
+                              <td className="px-4 py-3 font-medium text-gray-900">{reporter.name}</td>
+                              <td className="px-4 py-3 text-gray-600">{reporter.email}</td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`font-mono text-[11px] uppercase tracking-wide ${
+                                    reporter.is_active ? 'text-[#4f46e5]' : 'text-gray-400'
+                                  }`}
+                                >
+                                  {reporter.is_active ? 'Active' : 'Terminated'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {reporter.is_active && (
+                                  <button
+                                    onClick={() => handleTerminate(reporter.id)}
+                                    className="mr-3 text-xs font-semibold uppercase tracking-wide text-gray-600 hover:underline"
+                                  >
+                                    Terminate
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDelete(reporter.id)}
+                                  className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-700 hover:underline"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-200 p-6">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-500 uppercase tracking-wide">Add a reporter</p>
+                    <h2 className="text-xl font-semibold text-gray-900">New account</h2>
+                  </div>
+                </div>
+
+                <form onSubmit={handleCreate} className="space-y-5">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      Full name
+                    </label>
+                    <input
+                      id="name"
+                      required
+                      minLength={2}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="mt-2 block w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#c7d2fe]"
+                      placeholder="Jane Doe"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="reporter-email" className="block text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    <input
+                      id="reporter-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-2 block w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#c7d2fe]"
+                      placeholder="jane@newsroom.com"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-[#1a252f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#111923] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting ? 'Creating…' : 'Create reporter account'}
+                  </button>
+
+                  <p className="text-xs text-gray-500">
+                    A temporary password is generated automatically and emailed to the reporter.
+                  </p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
