@@ -113,23 +113,35 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-[#ebf1f5] font-sans antialiased flex flex-col md:flex-row">
-      
+
       {/* --- SIDE NAVIGATION BAR --- */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
+          fixed inset-y-0 left-0 z-40 w-64 max-w-[80vw] bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
           md:translate-x-0 md:sticky md:top-0 md:h-screen flex flex-col
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-0 max-md:-translate-x-full'}
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="h-16 flex items-center px-6 border-b border-gray-100 gap-3">
-          <img src="/BBN254.jpeg" alt="App Logo" className="h-12 w-20 object-cover" />
-          <div>
-            <div className="font-bold text-sm text-gray-800">BBN KENYA</div>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 gap-3 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/BBN254.jpeg" alt="App Logo" className="h-12 w-20 object-cover shrink-0" />
+            <div className="min-w-0">
+              <div className="font-bold text-sm text-gray-800 truncate">BBN KENYA</div>
+            </div>
           </div>
+          {/* Mobile-only close control for the drawer */}
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-lg md:hidden shrink-0"
+            aria-label="Close menu"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -160,32 +172,41 @@ export default function AdminUsersPage() {
 
       {/* --- WORKSPACE VIEWSPACE --- */}
       <div className="flex-1 flex flex-col min-w-0">
-        
+
         {/* --- TOP HEADER NAVIGATION BAR --- */}
-        <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shrink-0">
-          <div className="flex items-center gap-3">
-            <button 
+        <header className="sticky top-0 z-20 h-16 bg-white border-b border-gray-200 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg md:hidden"
+              className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg md:hidden shrink-0"
+              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              {isSidebarOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
             </button>
-            <h1 className="text-lg font-semibold text-gray-800">Admin Add Reporters</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-gray-800 truncate">
+              Admin Add Reporters
+            </h1>
           </div>
 
           {/* Identity controls and logout profile settings structure */}
-          <div className="relative">
-            <button 
+          <div className="relative shrink-0">
+            <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
               className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-full transition"
             >
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm shrink-0">
                 SA
               </div>
               <span className="hidden sm:block text-sm font-medium text-gray-700">Super Admin</span>
-              <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-4 w-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -210,7 +231,7 @@ export default function AdminUsersPage() {
         </header>
 
         {/* --- PANEL MAIN BODY CONTAINER --- */}
-        <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto">
           <nav className="text-sm text-gray-500 flex items-center gap-2">
             <span className="hover:text-slate-700 cursor-pointer">Home</span>
             <span>&gt;</span>
@@ -229,10 +250,10 @@ export default function AdminUsersPage() {
             </AlertBanner>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-6">
+          <div className="grid gap-4 md:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-6 min-w-0">
               <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden border border-gray-200">
-                <div className="bg-[#4f46e5] text-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="bg-[#4f46e5] text-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div>
                     <h2 className="text-lg font-semibold">Reporter roster</h2>
                     <p className="text-sm text-white/80">All registered reporters and account status.</p>
@@ -240,7 +261,7 @@ export default function AdminUsersPage() {
                   <div className="text-sm font-semibold text-white">{loading ? '...' : `${reporters.length} reporters`}</div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {loading ? (
                     <div className="py-12 text-center text-gray-500 font-medium">Loading reporters...</div>
                   ) : reporters.length === 0 ? (
@@ -302,8 +323,8 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Side Column Data Creation Widget */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-200 p-6">
+            <div className="space-y-6 min-w-0">
+              <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-200 p-4 sm:p-6">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div>
                     <p className="text-sm text-gray-500 uppercase tracking-wide">Add a reporter</p>
